@@ -1,0 +1,162 @@
+package vista;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import modelo.*;
+import controlador.*;
+
+public class Vista extends JFrame {
+    private JPanel panelTablero;
+    private JButton btnAvanzarMovimiento;
+    private JButton btnReiniciar;
+    private JButton btnCargarPgn;
+    private JTextArea areaTextoPgn;
+    private JLabel[][] casillas;
+
+    private Controlador controlador; // Controlador para manejar la lógica
+
+    public Vista() {
+        setTitle("Ajedrez");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(800, 600);
+        setLayout(new BorderLayout());
+
+        // Crear el modelo y el controlador
+        Tablero tablero = new Tablero();
+        LectorPGN lectorPGN = new LectorPGN();
+        controlador = new Controlador(tablero, this, lectorPGN);
+
+        inicializarVista();
+
+        setVisible(true);
+    }
+
+    // Inicializa los componentes de la vista
+    private void inicializarVista() {
+        // Crear el tablero visual
+        panelTablero = new JPanel();
+        panelTablero.setLayout(new GridLayout(8, 8));
+        casillas = new JLabel[8][8];
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                JLabel casilla = new JLabel();
+                casilla.setHorizontalAlignment(SwingConstants.CENTER);
+                casilla.setOpaque(true);
+                casilla.setBackground((i + j) % 2 == 0 ? Color.WHITE : Color.GRAY);
+                casilla.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+                casillas[i][j] = casilla;
+                panelTablero.add(casilla);
+            }
+        }
+
+        actualizarTablero();
+
+        // Área de texto para el PGN
+        areaTextoPgn = new JTextArea(5, 20);
+        areaTextoPgn.setLineWrap(true);
+        areaTextoPgn.setWrapStyleWord(true);
+        JScrollPane pgnScrollPane = new JScrollPane(areaTextoPgn);
+
+        // Botones
+        JPanel panelBotones = new JPanel();
+        panelBotones.setLayout(new FlowLayout());
+
+        btnCargarPgn = new JButton("Cargar PGN");
+        btnCargarPgn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cargarMovimientos();
+            }
+        });
+
+        btnAvanzarMovimiento = new JButton("Avanzar Movimiento");
+        btnAvanzarMovimiento.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                avanzarMovimiento();
+            }
+        });
+
+        btnReiniciar = new JButton("Reiniciar");
+        btnReiniciar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reiniciarPartida();
+            }
+        });
+
+        panelBotones.add(btnCargarPgn);
+        panelBotones.add(btnAvanzarMovimiento);
+        panelBotones.add(btnReiniciar);
+
+        // Panel principal
+        JPanel panelPrincipal = new JPanel();
+        panelPrincipal.setLayout(new BorderLayout());
+        panelPrincipal.add(panelTablero, BorderLayout.CENTER);
+        panelPrincipal.add(panelBotones, BorderLayout.SOUTH);
+
+        add(panelPrincipal, BorderLayout.CENTER);
+        add(pgnScrollPane, BorderLayout.EAST);
+    }
+
+    // Actualiza la vista del tablero según el estado actual
+    public void actualizarTablero() {
+        Tablero tablero = controlador.obtenerTablero(); // Obtener el estado actual del tablero
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                Ficha ficha = tablero.obtenerPieza(i, j);
+                if (ficha != null) {
+                    casillas[i][j].setText(getSimboloFicha(ficha));
+                } else {
+                    casillas[i][j].setText("");
+                }
+            }
+        }
+    }
+
+    // Devuelve un símbolo unicode o texto representando la pieza
+    private String getSimboloFicha(Ficha ficha) {
+        String color = ficha.getColor();
+        if (ficha instanceof Rey) return color.equals("blanco") ? "♔" : "♚";
+        if (ficha instanceof Reina) return color.equals("blanco") ? "♕" : "♛";
+        if (ficha instanceof Torre) return color.equals("blanco") ? "♖" : "♜";
+        if (ficha instanceof Alfil) return color.equals("blanco") ? "♗" : "♝";
+        if (ficha instanceof Caballo) return color.equals("blanco") ? "♘" : "♞";
+        if (ficha instanceof Peon) return color.equals("blanco") ? "♙" : "♟";
+        return "?";
+    }
+
+    // Lógica para cargar movimientos desde el texto del PGN
+    private void cargarMovimientos() {
+        String pgnTexto = areaTextoPgn.getText().trim();
+        if (pgnTexto.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Por favor, introduce texto PGN.");
+            return;
+        }
+
+        controlador.cargarMovimientos(pgnTexto); // Pasar los movimientos al controlador
+        JOptionPane.showMessageDialog(this, "Movimientos cargados correctamente.");
+    }
+
+    // Lógica para avanzar un movimiento
+    private void avanzarMovimiento() {
+        if (!controlador.realizarMovimiento()) {
+            JOptionPane.showMessageDialog(this, "No hay más movimientos por avanzar.");
+        }
+    }
+
+    // Reinicia la partida al estado inicial
+    private void reiniciarPartida() {
+        controlador.reiniciarJuego();
+        actualizarTablero();
+        areaTextoPgn.setText("");
+    }
+
+    public static void main(String[] args) {
+        new Vista();
+    }
+}

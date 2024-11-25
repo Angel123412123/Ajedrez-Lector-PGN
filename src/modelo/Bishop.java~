@@ -1,0 +1,46 @@
+package modelo;public class Bishop extends ChessPiece {
+    public Bishop(String color) {
+        super(color);
+    }
+
+    @Override
+    public boolean isValidMove(int startRow, int startCol, int endRow, int endCol, Board board) {
+        // Verificar que el movimiento es diagonal
+        int rowDiff = Math.abs(endRow - startRow);
+        int colDiff = Math.abs(endCol - startCol);
+
+        // El movimiento debe ser diagonal (igual número de filas y columnas)
+        if (rowDiff != colDiff) {
+            return false;
+        }
+
+        // Verificar que no hay piezas en el camino
+        int rowDirection = endRow > startRow ? 1 : -1;
+        int colDirection = endCol > startCol ? 1 : -1;
+
+        int currentRow = startRow + rowDirection;
+        int currentCol = startCol + colDirection;
+
+        while (currentRow != endRow && currentCol != endCol) {
+            if (board.getPiece(currentRow, currentCol) != null) {
+                return false;
+            }
+            currentRow += rowDirection;
+            currentCol += colDirection;
+        }
+
+        // Verificar la pieza en el destino
+        ChessPiece targetPiece = board.getPiece(endRow, endCol);
+        if (targetPiece != null) {
+            // No puede capturar una pieza del mismo color
+            return !targetPiece.getPieceColor().equals(this.getPieceColor());
+        }
+
+        return true;
+    }
+
+    @Override
+    public ChessPiece createCopy() {
+        return new Bishop(this.color);
+    }
+}

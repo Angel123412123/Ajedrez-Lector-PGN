@@ -1,0 +1,44 @@
+package modelo;
+
+public class Rook extends ChessPiece {
+    private boolean hasMoved;
+
+    public Rook(String color) {
+        super(color);
+        this.hasMoved = false;
+    }
+
+    public boolean hasBeenMoved() {
+        return hasMoved;
+    }
+
+    public void setHasMoved(boolean moved) {
+        this.hasMoved = moved;
+    }
+    @Override
+    public boolean isValidMove(int startRow, int startCol, int endRow, int endCol, Board board) {
+        // Movimiento debe ser horizontal o vertical
+        if (startRow != endRow && startCol != endCol) {
+            return false;
+        }
+
+        // Verificar piezas en el camino
+        int rowDirection = Integer.compare(endRow, startRow);
+        int colDirection = Integer.compare(endCol, startCol);
+
+        int currentRow = startRow + rowDirection;
+        int currentCol = startCol + colDirection;
+
+        while (currentRow != endRow || currentCol != endCol) {
+            if (board.getPiece(currentRow, currentCol) != null) {
+                return false;
+            }
+            currentRow += rowDirection;
+            currentCol += colDirection;
+        }
+
+        // Verificar pieza en destino
+        ChessPiece targetPiece = board.getPiece(endRow, endCol);
+        return targetPiece == null || !targetPiece.getPieceColor().equals(this.color);
+    }
+}

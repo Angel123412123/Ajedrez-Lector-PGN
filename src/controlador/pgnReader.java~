@@ -1,0 +1,53 @@
+package controlador;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class pgnReader {
+
+    private List<String> movimientos; // Lista de movimientos procesados
+
+    public pgnReader() {
+        this.movimientos = new ArrayList<>();
+    }
+
+    /**
+     * Procesa los movimientos desde una cadena de texto en formato PGN.
+     *
+     * @param pgnTexto Texto completo en formato PGN.
+     */
+    public void leerPgn(String pgnTexto) {
+        movimientos.clear();
+
+        // Limpia líneas no relacionadas con movimientos (metadatos entre corchetes)
+        String[] lineas = pgnTexto.split("\n");
+        StringBuilder movimientosConcatenados = new StringBuilder();
+        for (String linea : lineas) {
+            if (!linea.startsWith("[")) { // Ignorar líneas que comienzan con "["
+                movimientosConcatenados.append(linea).append(" ");
+            }
+        }
+
+        // Limpia los números de turnos y separa los movimientos
+        String movimientosLimpios = movimientosConcatenados.toString().replaceAll("\\d+\\.\\s*", "").trim();
+        String[] movimientosSeparados = movimientosLimpios.split("\\s+");
+
+        for (String movimiento : movimientosSeparados) {
+            // Ignorar resultados del juego (e.g., "1-0", "0-1", "1/2-1/2")
+            if (movimiento.matches("1-0|0-1|1/2-1/2")) {
+                continue;
+            }
+            movimientos.add(movimiento);
+        }
+    }
+
+    /**
+     * Devuelve la lista de movimientos procesados.
+     *
+     * @return Lista de movimientos en orden.
+     */
+    public List<String> getMovimientos() {
+        return movimientos;
+    }
+
+}
